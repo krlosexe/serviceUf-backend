@@ -103,8 +103,37 @@ Route::get('category/sub/{category}/{state?}', 'CategoryController@getSubCategor
 
 Route::resource('request/service', 'RequestServiceController');
 Route::get('request/service/by/client/{id_client}', 'RequestServiceController@RequestByClient');
+Route::get('requests/services/by/client/{id_client}', 'RequestServiceController@RequestsByClient');
 
 Route::get('request/offerts/by/service/{id_service}', 'RequestServiceController@RequestOffertsByService');
+Route::get('requests/offerts/by/client/{id_client}', 'RequestServiceController@RequestOffertsByClient');
+Route::get('process/service/{id_service}', 'RequestServiceController@ProcessService');
+Route::get('cancel/request/service/{id_service}', 'RequestServiceController@CancelService');
+Route::get('refuse/request/offert/{id_offert}', 'RequestServiceController@RefuseOffert');
 
+
+Route::post('calification/service/provider', 'CalificationController@store');
+Route::get('get/rating/service/provider/{id}', 'CalificationController@GetRatingServiceProvider');
 
 Route::post('test/notification', 'NotificationApp@Send');
+
+Route::get('get/status/service/provider/{id_client}', 'ClientsController@GetStatusServiceProvider');
+Route::post('postulated/service/provicer', 'ClientsController@PostulatedServiceProvider');
+Route::get('update/status/service/provider/{id_client}/{status}', 'ClientsController@UpdateStatusServiceProvider');
+
+
+
+Route::get('request/service/for/provider/{id_client}', 'RequestServiceController@GetRequestServicesForProvider');
+Route::post('store/offert/service', 'RequestServiceController@StoreOffert');
+Route::post('accept/offert', 'RequestServiceController@AcceptOffert');
+
+
+Route::post('store/credit/client', 'AccountStatusController@StoreCredit');
+Route::get('get/balance/client/{id_client}', 'AccountStatusController@GetBalanceClient');
+Route::get('get/account/status/client/{id_client}', 'AccountStatusController@GetAccountStatusClient');
+
+Route::resource('chat/souport', 'ChatsSouportController');
+Route::get('chat/souport/by/client/{id}', 'ChatsSouportController@GetChatByClient');
+Route::post('store/message/souport', 'ChatsSouportController@StoreSouport');
+
+Route::resource('report/services', 'ReportServicesController');

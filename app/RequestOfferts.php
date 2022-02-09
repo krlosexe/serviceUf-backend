@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class RequestOfferts extends Model
 {
     protected $fillable = [
-        'id_service', 'price', 'comments', 'time', 'status'
+        'id_client',  'id_service', 'price', 'comments', 'time', 'status'
     ];
 
     protected $table         = 'request_offerts';

@@ -89,6 +89,16 @@ class ClientsController extends Controller
 
         $request["password"] = md5($request["password"]);
 
+
+
+        $folder = "img/usuarios/profile";
+
+        $img      = str_replace('data:image/png;base64,', '', $request["photoProfile"]);
+        $fileData = base64_decode($img);
+        $fileName = rand(0, 100000000) . '-profile.png';
+        file_put_contents($folder . "/" . $fileName, $fileData);
+        $request["photo_profile"] = $fileName;
+
         $cliente  = Clients::create($request->all());
 
         if ($cliente) {
@@ -130,35 +140,10 @@ class ClientsController extends Controller
      * @param  \App\Clients  $clients
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request, $clients)
+    public function show($clients)
     {
-        if ($this->VerifyLogin($request["id_user"],$request["token"])){
-
-
-            $data = Clients::select("clientes.*","client_clinic_history.*",
-                                    "clientc_credit_information.*", "lines_business.nombre_line", "client_information_aditional_surgery.*"
-                                     )
-
-
-                                ->join("client_clinic_history", "client_clinic_history.id_client", "=", "clientes.id_cliente")
-                                ->join("clientc_credit_information", "clientc_credit_information.id_client", "=", "clientes.id_cliente")
-                                ->join("client_information_aditional_surgery", "client_information_aditional_surgery.id_client", "=", "clientes.id_cliente")
-                                ->join("lines_business", "lines_business.id_line", "=", "clientes.id_line", "left")
-
-
-                                ->with("logs")
-                                ->with("phones")
-                                ->with("emails")
-                                ->with("procedures")
-
-                                ->where("clientes.id_cliente", $clients)
-
-                                ->first();
-
-            return response()->json($data)->setStatusCode(200);
-        }else{
-            return response()->json("No esta autorizado")->setStatusCode(400);
-        }
+        $data = Clients::where("clientes.id", $clients) ->first();
+        return response()->json($data)->setStatusCode(200);
     }
 
 
@@ -245,6 +230,66 @@ class ClientsController extends Controller
 
 
     }
+
+
+    public function PostulatedServiceProvider(Request $request){
+
+        if($request["barber"] == true){
+            DB::table("clientes_services_category")->insert([
+                "id_client"   => $request["id_client"],
+                "id_category" => 1
+            ]);
+        }
+
+
+        if($request["trenzado"] == true){
+            DB::table("clientes_services_category")->insert([
+                "id_client"   => $request["id_client"],
+                "id_category" => 2
+            ]);
+        }
+
+
+        if($request["pedicure"] == true){
+            DB::table("clientes_services_category")->insert([
+                "id_client"   => $request["id_client"],
+                "id_category" => 3
+            ]);
+        }
+
+        $request["service_provider"] = "Reviewing";
+        $cliente = Clients::where("id", $request["id_client"])->update([
+            "names"               => $request["names"],
+            "last_names"          => $request["last_names"],
+            "email"               => $request["email"],
+            "identification"      => $request["identification"],
+            "type_identification" => $request["type_identification"],
+            "phone"               => $request["phone"],
+            "municipality"        => $request["municipality"],
+            "service_provider"    => $request["service_provider"]
+        ]);
+
+
+        $data = array('mensagge' => "Los datos fueron registrados satisfactoriamente");
+        return response()->json($data)->setStatusCode(200);
+
+    }
+
+
+    public function GetStatusServiceProvider($id_client){
+        $data = Clients::where("id", $id_client)->first();
+        return response()->json($data)->setStatusCode(200);
+    }   
+
+
+
+    public function UpdateStatusServiceProvider($id_client, $status){
+        $data = Clients::where("id", $id_client)->update([
+            "service_provider_status" => $status
+        ]);
+        return response()->json($data)->setStatusCode(200);
+    }
+
 
 
 
