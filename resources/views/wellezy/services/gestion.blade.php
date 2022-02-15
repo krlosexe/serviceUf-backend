@@ -221,66 +221,18 @@
 				<div class="card shadow mb-4" id="cuadro1">
 					<div class="card-header py-3">
 						<h6 class="m-0 font-weight-bold text-primary">Gestion de Servicios</h6>
-
-						<button onclick="nuevo()" class="btn btn-primary btn-icon-split" style="float: right;">
-							<span class="icon text-white-50">
-								<i class="fas fa-plus"></i>
-							</span>
-							<span class="text">Nuevo registro</span>
-						</button>
 					</div>
 					<div class="card-body">
-
-						<div class="row">
-
-							<!-- <div class="col-md-3">
-								<div class="form-group">
-									<label for=""><b>Filtrar por : Asesora</b></label>
-									<select name="adviser[]" id="id_asesora_valoracion-filter" class="form-control select2 disabled" multiple>
-										<option value="">Seleccione</option>
-									</select>
-								</div>
-							</div>
-
-
-
-							<div class="col-md-3">
-								<div class="form-group">
-									<label for=""><b><br></b></label>
-									<select id="overdue-filter" class="form-control">
-										<option value="all">Todas</option>
-										<option value="overdue">Vencidas</option>
-										<option value="Abierta">En Proceso</option>
-									</select>
-								</div>
-							</div>
-
-
-
-							<div class="col-md-3">
-								<div class="form-group">
-									<label for=""><b>Fecha desde</b></label>
-									<input type="date" class="form-control" id="date_init">
-								</div>
-							</div>
-
-							<div class="col-md-3">
-								<div class="form-group">
-									<label for=""><b>Fecha hasta</b></label>
-									<input type="date" class="form-control" id="date_finish">
-								</div>
-							</div> -->
-
-						</div>
-
-
-
 						<div class="table-responsive">
 							<table class="table table-bordered" id="table" width="100%" cellspacing="0">
 								<thead>
 									<tr>
 										<th>Acciones</th>
-										<th>Nombre</th>
+										<th>Cliente</th>
+										<th>Categoria</th>
+										<th>Ubicacion</th>
+										<th>Estatus</th>
+										<th>Fecha</th>
 									</tr>
 								</thead>
 								<tbody></tbody>
@@ -320,6 +272,61 @@
 
 
 		</div>
+
+
+		<div class="modal" tabindex="-1" role="dialog" id="exampleModal">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Ofertas</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<table class="table table-bordered" id="table-offert" width="100%" cellspacing="0">
+						<thead>
+							<th>Prestador de Servicios</th>
+							<th>Precio</th>
+							<th>Estatus</th>
+						</thead>
+
+						<tbody>
+
+						</tbody>
+					</table>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+				</div>
+			</div>
+		</div>
+
+
+
+		<div class="modal" tabindex="-1" role="dialog" id="WarningModal">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Reporte</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<p id="text-report"></p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+				</div>
+			</div>
+		</div>
+
+
+
+
 
 
 		<!-- Footer -->
@@ -409,7 +416,7 @@
 			"serverSide": false,
 			"ajax": {
 				"method": "GET",
-				"url": '' + url + '/api/wellezy/service/list',
+				"url": '' + url + '/api/request/service',
 				// "data": {
 				// 	"rol": name_rol,
 				// 	"id_user": id_user,
@@ -436,12 +443,37 @@
 							botones += "<span class='activar btn btn-sm btn-warning waves-effect' data-toggle='tooltip' title='Activar'><i class='fa fa-lock' style='margin-bottom:5px'></i></span> ";
 						if (borrar == 1)
 							botones += "<span class='eliminar btn btn-sm btn-danger waves-effect' data-toggle='tooltip' title='Eliminar'><i class='fas fa-trash-alt' style='margin-bottom:5px'></i></span>";
+						
+						
+						botones += "<span class='consultar btn btn-sm btn-info waves-effect' data-toggle='tooltip' title='Consultar'><i class='fa fa-eye' style='margin-bottom:5px'></i></span> ";
+						
+						if(row.status == "Reportado"){
+							botones += "<span class='report btn btn-sm btn-danger waves-effect' data-toggle='tooltip' title='Reporte'><i class='fas fa-exclamation-triangle' style='margin-bottom:5px'></i></span>";
+						}
+
 						return botones;
 					}
 				},
 			
 				{
-					"data": "name"
+					"data": "names",
+					render : function(data, type, row) {
+						return data+" "+row.last_names;
+					}
+				},
+				{
+					"data": "name_category"
+				},
+				{
+					"data": "address"
+				},
+				{
+					"data": "status"
+				},
+
+
+				{
+					"data": "created_at"
 				}
 			],
 			"language": idioma_espanol,
@@ -458,10 +490,7 @@
 
 
 		ver("#table tbody", table)
-		edit("#table tbody", table)
-		activar("#table tbody", table)
-		desactivar("#table tbody", table)
-		eliminar("#table tbody", table)
+		warning("#table tbody", table)
 
 
 		if (id_rol == 21) {
@@ -527,17 +556,7 @@
 				var html = "";
 
 				$.map(result, function(item, key) {
-					html += '<div class="col-md-12" style="margin-bottom: 15px">'
-					html += '<div class="row">'
-					html += '<div class="col-md-2">'
-					html += "<img class='rounded' src='" + url + "/img/usuarios/profile/" + item.img_profile + "' style='height: 4rem;width: 4rem; margin: 1%; border-radius: 50%!important;' title='" + item.name_follower + " " + item.last_name_follower + "'>"
-					html += '</div>'
-					html += '<div class="col-md-10" style="background: #eee;padding: 2%;border-radius: 17px;">'
-					html += '<div>' + item.comments + '</div>'
-					html += '<div><b>' + item.name_user + " " + item.last_name_user + '</b> <span style="float: right">' + item.create_at + '</span></div>'
-					html += '</div>'
-					html += '</div>'
-					html += '</div>'
+					
 
 				});
 
@@ -554,41 +573,78 @@
 		Funcion que muestra el cuadro3 para la consulta del banco.
 	*/
 	function ver(tbody, table) {
+		var url = document.getElementById('ruta').value;
 		$(tbody).on("click", "span.consultar", function() {
 			$("#alertas").css("display", "none");
 			var data = table.row($(this).parents("tr")).data();
+			$("#table-offert tbody").html("")
+			$.ajax({
+				url: '' + url + '/api/all/request/offerts/by/service/' + data.id,
+				type: 'GET',
+				dataType: 'JSON',
 
-			GetUsers("#responsable-view", data.responsable)
-			GetUsers("#followers-view")
+				beforeSend: function() {
+
+				},
+				error: function(data) {},
+				success: function(result) {
+					console.log(result, "RESULT")
+					var url = document.getElementById('ruta').value;
+					var html = "";
+					
+					$.map(result, function(item, key) {
+
+						console.log(item, "ITEM")
+						html += `<tr>
+							<td>${item.name_client} ${item.last_name_client}</td>
+							<td>${item.price}</td>
+							<td>${item.status}</td>
+						</tr>`
+
+					});
 
 
-			//getPacientes("#paciente-view", data.id_client)
+					console.log(html, "HTML")
 
-			$("#name_client-view").val(data.name_client).attr("disabled", "disabled")
+					$("#table-offert tbody").html(html)
 
-			$("#responsable-view").val(data.responsable).attr("disabled", "disabled")
-			$("#issue-view").val(data.issue).attr("disabled", "disabled")
-			$("#paciente-view").val(data.id_client).attr("disabled", "disabled")
-			$("#fecha-view").val(data.fecha).attr("disabled", "disabled")
-			$("#time-view").val(data.time).attr("disabled", "disabled")
-			$("#observaciones-view").val(data.observaciones).attr("disabled", "disabled")
-			$("#status_task-view").val(data.status_task).attr("disabled", "disabled")
-
-			var followers = []
-			$.each(data.followers, function(key, item) {
-				followers.push(item.id_follower)
+					$("#exampleModal").modal("show")
+				}
 			});
 
-			$("#followers-view").val(followers).attr("disabled", "disabled")
-			$("#followers-view").trigger("change");
-
-
-			//	GetComments("#comments", data.id_client)
-
-			cuadros('#cuadro1', '#cuadro3');
+			//cuadros('#cuadro1', '#cuadro3');
 		});
 	}
 
+
+
+	function warning(tbody, table){
+		var url = document.getElementById('ruta').value;
+		$(tbody).on("click", "span.report", function() {
+			$("#alertas").css("display", "none");
+			var data = table.row($(this).parents("tr")).data();
+			$.ajax({
+				url: '' + url + '/api/get/report/' + data.id,
+				type: 'GET',
+				dataType: 'JSON',
+
+				beforeSend: function() {
+
+				},
+				error: function(data) {},
+				success: function(result) {
+					console.log(result, "RESULT")
+					var url = document.getElementById('ruta').value;
+					
+					$("#text-report").text(result.comments)
+					$("#WarningModal").modal("show")
+
+				}
+			});
+
+			//cuadros('#cuadro1', '#cuadro3');
+		});
+	}
 
 
 	/* ------------------------------------------------------------------------------- */

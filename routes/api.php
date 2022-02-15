@@ -64,6 +64,7 @@ Route::post('status-rol/{id}/{status}', 'RolesController@status');
 
 
 Route::resource('clients', 'ClientsController');
+Route::get('clients/aproved/{id}', 'ClientsController@AprovedServiceProvider');
 
 
 Route::put('update/photo/clients/{id_client}', 'ClientsController@UpdatePhotoProfile');
@@ -106,11 +107,12 @@ Route::get('request/service/by/client/{id_client}', 'RequestServiceController@Re
 Route::get('requests/services/by/client/{id_client}', 'RequestServiceController@RequestsByClient');
 
 Route::get('request/offerts/by/service/{id_service}', 'RequestServiceController@RequestOffertsByService');
+Route::get('all/request/offerts/by/service/{id_service}', 'RequestServiceController@RequestAllOffertsByService');
 Route::get('requests/offerts/by/client/{id_client}', 'RequestServiceController@RequestOffertsByClient');
 Route::get('process/service/{id_service}', 'RequestServiceController@ProcessService');
 Route::get('cancel/request/service/{id_service}', 'RequestServiceController@CancelService');
 Route::get('refuse/request/offert/{id_offert}', 'RequestServiceController@RefuseOffert');
-
+Route::get('get/report/{id_service}', 'RequestServiceController@GetReport');
 
 Route::post('calification/service/provider', 'CalificationController@store');
 Route::get('get/rating/service/provider/{id}', 'CalificationController@GetRatingServiceProvider');

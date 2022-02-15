@@ -55,10 +55,17 @@ class ClientsController extends Controller
      */
     public function index(Request $request)
     {
-        $rol     = $request["rol"];
-        $id_user = $request["id_user"];
-            return response()->json([])->setStatusCode(200);
-        
+        $data =  Clients::orderBy("id", "desc")
+                        ->get();
+        $data->map(function($item){
+            $item->request_offerts = DB::table("request_offerts")
+                                    ->selectRaw("COUNT(request_offerts.id) as count_services")
+                                    ->where('id_client',$item->id)
+                                    ->where('status', "Aprobada")
+                                    ->first();
+            return $item;
+        });
+        return response()->json($data)->setStatusCode(200);
     }
 
 
@@ -291,6 +298,28 @@ class ClientsController extends Controller
     }
 
 
+    public function AprovedServiceProvider($id_client){
+
+        $data = Clients::where("id", $id_client)->update([
+            "service_provider" => "Approved"
+        ]);
+
+
+        $token = Clients::where("id", $id_client)->pluck('fcmToken')->toArray();
+
+
+        $ConfigNotification = [
+            "tokens" => $token,
+            "tittle" => "ServiUf",
+            "body"   => "Has sido aprobado como prestador de servicios",
+            "data"   => ['type' => 'refferers']
+        ];
+    
+        $code = SendNotifications($ConfigNotification);
+
+
+        return response()->json("Ok")->setStatusCode(200);
+    }
 
 
 

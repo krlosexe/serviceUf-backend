@@ -20,9 +20,9 @@ class ChatsSouportController extends Controller
     }
 
 
-    public function GetChatByClient($id_client)
+    public function GetChatByClient($id_service)
     {
-        $data = ChatsSouport::where("sender", $id_client)->orWhere("receiver", $id_client)->get();
+        $data = ChatsSouport::where("id_service", $id_service)->get();
         return response()->json($data)->setStatusCode(200);
     }
 
@@ -48,6 +48,19 @@ class ChatsSouportController extends Controller
     public function store(Request $request)
     {
         ChatsSouport::create($request->all());
+
+        $token = Clients::where("id", $request["receiver"])->first();
+
+        $ConfigNotification = [
+            "tokens" => [$token->fcmToken],
+            "tittle" => "Chat del servicio",
+            "body"   => "Has recibido un nuevo mensaje",
+            "data"   => ['type' => 'refferers']
+        ];
+    
+        $code = SendNotifications($ConfigNotification);
+
+
         $data = array('mensagge' => "Los datos fueron registrados satisfactoriamente");
         return response()->json($data)->setStatusCode(200);
     }

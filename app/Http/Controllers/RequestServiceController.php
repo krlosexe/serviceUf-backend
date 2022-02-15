@@ -18,7 +18,13 @@ class RequestServiceController extends Controller
      */
     public function index()
     {
-        //
+         $data = RequestService::selectRaw("request_service.*, category.name as name_category, clientes.names, clientes.last_names")
+                                ->join("category", "category.id", "=", "request_service.id_category")
+                                ->join("clientes", "clientes.id", "=", "request_service.id_client")
+                                ->orderBy("id", "desc")
+                                ->get();
+       
+        return response()->json($data)->setStatusCode(200);
     }
 
     /**
@@ -48,7 +54,7 @@ class RequestServiceController extends Controller
     {
         $data = RequestService::selectRaw("request_service.*, request_service.photo as photo_service, category.name as name_category, 
                                             clientes.names as name_client, clientes.photo_profile, 
-                                            clientes.last_names as last_name_client, request_offerts.time, request_offerts.price,
+                                            clientes.last_names as last_name_client, request_offerts.time, request_offerts.price, request_offerts.id_client as id_service_provider,
                                             rating.rating, rating.comments as comment_rating"
                                         )
                                 ->join("category", "category.id", "=", "request_service.id_category")
@@ -91,8 +97,37 @@ class RequestServiceController extends Controller
 
 
 
+    public function RequestAllOffertsByService($id_service){
+
+        $data = RequestOfferts::selectRaw("request_offerts.*, clientes.names as name_client, 
+                                          clientes.last_names as last_name_client")
+                                ->join("clientes", "clientes.id", "=", "request_offerts.id_client")
+                                ->where("request_offerts.id_service", $id_service)
+                                ->get();
+
+       
+
+        if($data[0]->id == null){
+            $data = [];
+        }
+        
+        
+        return response()->json($data)->setStatusCode(200);
+    }
+
+
+
+    public function GetReport($id_service){
+
+        $data = DB::table("reports_services")->where("id_service", $id_service)->first();
+        return response()->json($data)->setStatusCode(200);
+    }
+
+
+
+
     public function RequestOffertsByClient($id_client){
-        $data = RequestOfferts::selectRaw("request_offerts.*, category.name as name_category, clientes.names as name_client, clientes.last_names as last_name_client, clientes.photo_profile, request_service.address, request_service.date, request_service.phone, request_service.latitude, request_service.longitude, request_service.type, request_service.photo, rating.rating, rating.comments as comment_rating")
+        $data = RequestOfferts::selectRaw("request_offerts.*, category.name as name_category, clientes.names as name_client, clientes.last_names as last_name_client, clientes.photo_profile, request_service.id_client as id_client_service, request_service.address, request_service.date, request_service.phone, request_service.latitude, request_service.longitude, request_service.type, request_service.photo, rating.rating, rating.comments as comment_rating")
                                 ->join("request_service", "request_service.id", "=", "request_offerts.id_service")
                                 ->join("category", "category.id", "=", "request_service.id_category")
                                 ->join("clientes", "clientes.id", "=", "request_service.id_client")
