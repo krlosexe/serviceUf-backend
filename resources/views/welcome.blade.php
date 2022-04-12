@@ -1,100 +1,176 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>Signin Template · Bootstrap v5.1</title>
 
-        <title>Laravel</title>
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/sign-in/">
 
-        <!-- Fonts -->
-        <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
+    
 
-        <!-- Styles -->
-        <style>
-            html, body {
-                background-color: #fff;
-                color: #636b6f;
-                font-family: 'Nunito', sans-serif;
-                font-weight: 200;
-                height: 100vh;
-                margin: 0;
-            }
+    <!-- Bootstrap core CSS -->
+<link href="/assets/dist/css/bootstrap.min.css" rel="stylesheet">
 
-            .full-height {
-                height: 100vh;
-            }
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
 
-            .flex-center {
-                align-items: center;
-                display: flex;
-                justify-content: center;
-            }
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
 
-            .position-ref {
-                position: relative;
-            }
 
-            .top-right {
-                position: absolute;
-                right: 10px;
-                top: 18px;
-            }
+      html,
+body {
+  height: 100%;
+}
 
-            .content {
-                text-align: center;
-            }
+body {
+  display: flex;
+  align-items: center;
+  padding-top: 40px;
+  padding-bottom: 40px;
+  background-color: #f5f5f5;
+}
 
-            .title {
-                font-size: 84px;
-            }
+.form-signin {
+  width: 100%;
+  max-width: 330px;
+  padding: 15px;
+  margin: auto;
+}
 
-            .links > a {
-                color: #636b6f;
-                padding: 0 25px;
-                font-size: 13px;
-                font-weight: 600;
-                letter-spacing: .1rem;
-                text-decoration: none;
-                text-transform: uppercase;
-            }
+.form-signin .checkbox {
+  font-weight: 400;
+}
 
-            .m-b-md {
-                margin-bottom: 30px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="flex-center position-ref full-height">
-            @if (Route::has('login'))
-                <div class="top-right links">
-                    @auth
-                        <a href="{{ url('/home') }}">Home</a>
-                    @else
-                        <a href="{{ route('login') }}">Login</a>
+.form-signin .form-floating:focus-within {
+  z-index: 2;
+}
 
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}">Register</a>
-                        @endif
-                    @endauth
-                </div>
-            @endif
+.form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
 
-            <div class="content">
-                <div class="title m-b-md">
-                    Laravel
-                </div>
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
 
-                <div class="links">
-                    <a href="https://laravel.com/docs">Docs</a>
-                    <a href="https://laracasts.com">Laracasts</a>
-                    <a href="https://laravel-news.com">News</a>
-                    <a href="https://blog.laravel.com">Blog</a>
-                    <a href="https://nova.laravel.com">Nova</a>
-                    <a href="https://forge.laravel.com">Forge</a>
-                    <a href="https://vapor.laravel.com">Vapor</a>
-                    <a href="https://github.com/laravel/laravel">GitHub</a>
-                </div>
-            </div>
+
+
+    </style>
+
+    
+    <!-- Custom styles for this template -->
+    <link href="signin.css" rel="stylesheet">
+  </head>
+  <body class="text-center">
+    
+    <main class="form-signin">
+    <form id="store" method="POST">
+       
+        <img class="mb-4" src="/img/logo.png" alt="" width="72" height="57">
+        <h3 class="h7 mb-3 fw-normal">Hola {{$name}}, vamos a cambiar tu contraseña</h3>
+
+
+        <div class="alert" style="display:none" role="alert" id="alert"></div>
+
+
+        <div class="form-floating">
+        <input type="password" name="password" class="form-control" id="floatingInput" placeholder="name@example.com">
+        <label for="floatingInput">Nueva Contraseña</label>
         </div>
-    </body>
+        <div class="form-floating">
+        <input type="password" name="repeat_password" class="form-control" id="floatingPassword" placeholder="Password">
+        <label for="floatingPassword">Repetir Contraseña</label>
+        </div>  
+
+        <input type="hidden" class="form-control" name="id_client" value={{$id_client}} placeholder="name@example.com">
+
+    
+        <button class="w-100 btn btn-lg btn-primary" type="submit">Cambiar</button>
+        <p class="mt-5 mb-3 text-muted">&copy; 2022</p>
+    </form>
+    </main>
+    <input type="hidden" id="route" value="<?= url('/api') ?>">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+
+    
+
+    <script>
+        $(document).ready(function() {
+            Store();
+        });
+
+        const Store = () => {
+            SendForm("#store", 'change/password');
+        }
+
+         const SendForm = (form, route) => {
+            $(form).submit(function(e) {
+                e.preventDefault(); 
+
+                var url      = document.getElementById('route').value;
+                var formData = new FormData($(form)[0]); 
+                var method   = $(this).attr('method');
+
+                $('#submit').attr('disabled', 'disabled'); 
+
+                $.ajax({
+                    url: `${url}/${route}`,
+                    type: method,
+                    dataType: 'JSON',
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    beforeSend: function() {
+                        displayError("primary", "Please Wait...")
+                    },
+                    error: function(error) {
+                        $('#submit').removeAttr('disabled');
+                        displayError("danger", "Las contraseñas no coinciden")
+                                
+                    },
+                    success: function(response) {
+                        $('#submit').removeAttr('disabled');
+                        $(form)[0].reset()
+                        displayError("success", response)
+                    }
+                    });
+
+                });
+            }
+
+            const displayError = (type, message)=>{
+                $(".alert")
+                    .css("display", "block")
+                    .text(message)
+                    .removeClass("alert-success")
+                    .removeClass("alert-danger")
+                    .removeClass("alert-primary")
+                    .addClass(`alert-${type}`)
+            }
+
+
+
+    </script>
+
+  </body>
 </html>

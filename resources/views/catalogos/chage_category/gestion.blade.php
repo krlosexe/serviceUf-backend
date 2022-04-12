@@ -57,7 +57,7 @@
 			        <div class="container-fluid">
 
 			          <!-- Page Heading -->
-			          <h1 class="h3 mb-2 text-gray-800">Clientes</h1>
+			          <h1 class="h3 mb-2 text-gray-800">Solicitudes de Cambio de Categorias</h1>
 
 			          <div id="alertas"></div>
 			          <input type="hidden" class="id_user">
@@ -66,7 +66,7 @@
 			          <!-- DataTales Example -->
 			          <div class="card shadow mb-4" id="cuadro1">
 			            <div class="card-header py-3">
-			              <h6 class="m-0 font-weight-bold text-primary">Gestion de Clientes</h6>
+			              <h6 class="m-0 font-weight-bold text-primary">Gestion de Solicitudes de Cambio de Categorias</h6>
 
 			            </div>
 			            <div class="card-body">
@@ -78,13 +78,9 @@
 			                  <thead>
 			                    <tr>
 								  <th>Acciones</th>
-								  <th>Foto</th>
 								  <th>Nombres</th>
-								  <th>Telefono</th>
-								  <th>Correo</th>
-								  <th>Servicios Completados</th>
+								  <th>Categorias</th>
 								  <th>Estatus</th>
-								  <th>Estado</th>
 			                      <th style="width: 180px;">Fecha de registro</th>
 			                    </tr>
 			                  </thead>
@@ -105,9 +101,9 @@
 			          </div>
 
 
-			          @include('catalogos.clientes.store')
-					  @include('catalogos.clientes.view')
-					  @include('catalogos.clientes.edit')
+			          @include('catalogos.chage_category.store')
+					  @include('catalogos.chage_category.view')
+					  @include('catalogos.chage_category.edit')
 
 
 			        </div>
@@ -402,7 +398,7 @@
 					"serverSide":false,
 					"ajax":{
 						"method":"GET",
-						 "url":''+url+'/api/clients',
+						 "url":''+url+'/api/get/request/change/category',
 						 "data": {
 							"rol"    : name_rol,
 							"id_user": id_user,
@@ -414,27 +410,10 @@
 						{"data": null,
 							render : function(data, type, row) {
 								var botones = "";
-								if(consultar == 1)
-									//botones += "<span class='consultar btn btn-sm btn-info waves-effect' data-toggle='tooltip' title='Consultar'><i class='fa fa-eye' style='margin-bottom:5px'></i></span> ";
-								if(actualizar == 1)
-								//	botones += "<span class='editar btn btn-sm btn-primary waves-effect' data-toggle='tooltip' title='Editar'><i class='fas fa-edit' style='margin-bottom:5px'></i></span> ";
-									
-								if(data.status == 1 && actualizar == 1)
-									botones += "<span class='desactivar btn btn-sm btn-warning waves-effect' data-toggle='tooltip' title='Desactivar'><i class='fa fa-unlock' style='margin-bottom:5px'></i></span> ";
-								else if(data.status == 2 && actualizar == 1)
-									botones += "<span class='activar btn btn-sm btn-warning waves-effect' data-toggle='tooltip' title='Activar'><i class='fa fa-lock' style='margin-bottom:5px'></i></span> ";
-								if(borrar == 1)
-									//botones += "<span class='eliminar btn btn-sm btn-danger waves-effect' data-toggle='tooltip' title='Eliminar'><i class='fas fa-trash-alt' style='margin-bottom:5px'></i></span>";
-								
-								if(row.service_provider == "Reviewing"){
+								if(row.status == "Pendiente"){
 									botones += "<span class='aprobar btn btn-sm btn-success waves-effect' data-toggle='tooltip' title='Aprobar'><i class='fas fa-check' style='margin-bottom:5px'></i></span> ";
 								}
 								return botones;
-							}
-						},
-						{"data": "photo_profile",
-							render : function(data, type, row) {
-								return "<img width='40' height='40' style='border-radius: 100%' src='https://serviceuf.pdtcomunicaciones.com/img/usuarios/profile/"+data+"'>"
 							}
 						},
 						{"data":"names",
@@ -442,11 +421,25 @@
 								return data+" "+row.last_names;
 							}
 						},
-						{"data": "phone"},
-						{"data": "email"},
-						{"data": "request_offerts.count_services"},
-						{"data": "service_provider"},
-						{"data": "service_provider_status"},
+
+
+						{"data":"items",
+							render : function(data, type, row) {
+
+								let items = ""
+								data.map((item, key)=>{
+
+									if(item.value == 1){
+										items +=  item.name+", "
+									}
+									
+								})
+								return items;
+							}
+						},
+
+
+						{"data": "status"},
 						{"data": "created_at"},
 					],
 					"language": idioma_espanol,
@@ -2094,7 +2087,7 @@
 
 					var url = document.getElementById('ruta').value
 					$.ajax({
-						url:''+url+'/api/clients/aproved/'+data.id,
+						url:''+url+'/api/aproved/change/category/'+data.id,
 						type:'GET',
 						dataType:'JSON',
 

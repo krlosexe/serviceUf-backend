@@ -18,6 +18,8 @@ use App\datosPersonaesModel;
 */
 
 Route::post('auth', 'Login@Auth');
+Route::post('auth/recovery', 'Login@RecoveryAccount');
+Route::post('change/password', 'Login@ChangePassword');
 Route::post('GenerateCode', 'Login@GenerateCode');
 Route::post('CreateCode', 'Login@CreateCode');
 Route::post('VerifyCode', 'Login@VerifyCode');
@@ -111,7 +113,21 @@ Route::get('all/request/offerts/by/service/{id_service}', 'RequestServiceControl
 Route::get('requests/offerts/by/client/{id_client}', 'RequestServiceController@RequestOffertsByClient');
 Route::get('process/service/{id_service}', 'RequestServiceController@ProcessService');
 Route::get('cancel/request/service/{id_service}', 'RequestServiceController@CancelService');
+
+Route::get('cancel/request/service/pay/{id_service}/{pay}', 'RequestServiceController@CancelServicePay');
+Route::get('no/assistance/client/{id_service}/{pay}', 'RequestServiceController@NoAssistence');
+
+
+
 Route::get('refuse/request/offert/{id_offert}', 'RequestServiceController@RefuseOffert');
+
+
+Route::get('client/cancel/request/service/{id_service}', 'RequestServiceController@CancelClientService');
+
+Route::get('get/charge/client/{id_service}', 'RequestServiceController@getChargeClient');
+
+
+
 Route::get('get/report/{id_service}', 'RequestServiceController@GetReport');
 
 Route::post('calification/service/provider', 'CalificationController@store');
@@ -131,11 +147,49 @@ Route::post('accept/offert', 'RequestServiceController@AcceptOffert');
 
 
 Route::post('store/credit/client', 'AccountStatusController@StoreCredit');
+
+
+Route::post('store/charge/client', 'ClientsController@StoreCharge');
+
+
 Route::get('get/balance/client/{id_client}', 'AccountStatusController@GetBalanceClient');
 Route::get('get/account/status/client/{id_client}', 'AccountStatusController@GetAccountStatusClient');
+
+
+Route::get('get/categories/client/{id_client}', 'AccountStatusController@GetCategoriesClient');
+Route::post('change/category/client', 'AccountStatusController@RequestUpdateCategoriesClient');
+Route::get('get/request/change/category', 'AccountStatusController@GetChangeCategoriesClient');
+Route::get('aproved/change/category/{id}', 'AccountStatusController@AprovedChangeCategoriesClient');
+
+
 
 Route::resource('chat/souport', 'ChatsSouportController');
 Route::get('chat/souport/by/client/{id}', 'ChatsSouportController@GetChatByClient');
 Route::post('store/message/souport', 'ChatsSouportController@StoreSouport');
 
 Route::resource('report/services', 'ReportServicesController');
+
+
+
+Route::resource('request/offerts', 'RequestOffertsController');
+
+
+Route::get('app', function () {
+
+    $ConfigNotification = [
+        "tokens" => ["eTcaZsr3SmyYBBVKV7nq6R:APA91bHAZcaELO_e3UJojU2hXcoWUhYuLcvsguJWrO0lLEuEPDLzEWbCvtAcS3l0lvHIrmGu9ieDtjN-sYidZYZ8GYx6JLfOOricWBDVTgPuyC4YxfclRYIRy8IuehJUplGXsF2T9ucr"],
+        "tittle" => "ServiUf",
+        "body"   => "Nuevo servicio",
+        "data"   => ['type' => 'refferers'],
+        "sound"  => "iphone.mp3"
+    ];
+
+    $code = SendNotifications($ConfigNotification);
+
+    dd("YES");
+
+});
+
+
+
+

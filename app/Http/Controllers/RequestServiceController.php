@@ -7,6 +7,7 @@ use App\RequestOfferts;
 use App\ClientsServicesCategory;
 use App\Clients;
 use DB;
+use DateTime;
 use Illuminate\Http\Request;
 
 class RequestServiceController extends Controller
@@ -43,6 +44,15 @@ class RequestServiceController extends Controller
                                 ->where("status", "Pendiente")
                                 ->join("category", "category.id", "=", "request_service.id_category")
                                 ->first();
+
+        $date2    = new DateTime($data->created_at);
+        $date1    = new DateTime(date("Y-m-d G:i:s"));
+        $interval = $date1->diff($date2);
+        
+
+        $data->time = (60 - $interval->i) * 60;
+
+
         $offerts = RequestOfferts::where("id_service", $data->id)->where("status", "Pendiente")->get();
 
         $data->count_offerts = sizeof($offerts);
@@ -69,30 +79,36 @@ class RequestServiceController extends Controller
     }
     public function RequestOffertsByService($id_service){
 
+
+        
         $data = RequestOfferts::selectRaw("request_offerts.*, clientes.names as name_client, 
                                           clientes.last_names as last_name_client, 
-                                          clientes.photo_profile, SUM(rating.rating) as total_rating,  COUNT(rating.id) count_rating")
+                                          clientes.photo_profile")
                                 ->join("request_service", "request_service.id", "=", "request_offerts.id_service")
                                 ->join("clientes", "clientes.id", "=", "request_offerts.id_client")
-                                ->join("rating", "rating.id_service_provider", "=", "request_offerts.id_client", "left")
+                              //  ->join("rating", "rating.id_service_provider", "=", "request_offerts.id_client", "left")
                                 ->where("request_offerts.id_service", $id_service)
                                 ->where("request_offerts.status", "Pendiente")
                                 ->get();
 
+       if(sizeof($data)  > 0){
+            if($data[0]->id == null){
+                $data = [];
+            }else{
+                $data->map(function($item){
+                    $item->offerts_ready = sizeof(RequestOfferts::where('id_client',$item->id_client)->where("status", "Finalizada")->get());
+                    $item->total_rating  = DB::table("rating")->selectRaw("SUM(rating.rating) as total_rating")->where("id_service_provider", $item->id_client)->first()->total_rating;
+                    $item->count_rating  = DB::table("rating")->selectRaw("COUNT(rating.id) as count_rating")->where("id_service_provider", $item->id_client)->first()->count_rating;
+                    return $item;
+                });
+            }
+            
+            return response()->json($data)->setStatusCode(200);
+       }else{
+        return response()->json([])->setStatusCode(200);
+       }
        
-
-        if($data[0]->id == null){
-            $data = [];
-        }else{
-            $data->map(function($item){
-                $item->offerts_ready = sizeof(RequestOfferts::where('id_client',$item->id_client)->where("status", "Finalizada")->get());
-                
-                return $item;
-            });
-        }
         
-        
-        return response()->json($data)->setStatusCode(200);
     }
 
 
@@ -190,6 +206,13 @@ class RequestServiceController extends Controller
         }
 
 
+        $valid = RequestOfferts::where("id_service", $request["id_service"])->where( "id_client",  $request["id_provider"])->get();
+
+        if(sizeof($valid) > 0){
+            $data = array('mensagge' => "Ya tienes una oferta para este servicio");
+            return response()->json($data)->setStatusCode(400);
+        }
+
         RequestOfferts::create([
             "id_client"  => $request["id_provider"],
             "id_service" => $request["id_service"],
@@ -280,7 +303,143 @@ class RequestServiceController extends Controller
         $data = array('mensagge' => "Los datos fueron registrados satisfactoriamente");
         return response()->json($data)->setStatusCode(200);
 
+    }   
+
+
+
+    public function CancelServicePay($id_service, $pay){
+
+        $service = RequestService::where("id", $id_service)->first();
+
+        DB::table("cliente_charge")->insert([
+            "id_client" => $service->id_client,
+            "amount"    => $pay
+        ]);
+
+        $offert = RequestOfferts::join("clientes", "clientes.id", "=", "request_offerts.id_client")
+                                        ->where("request_offerts.id_service", $id_service)
+                                        ->first();
+
+
+
+        RequestService::where("id", $id_service)->update([
+            "status"    => "Cancelado"
+        ]);
+
+        RequestOfferts::where("request_offerts.id_service", $id_service)->update([
+            "status" => "Cancelado"
+        ]);
+
+        $ConfigNotification = [
+            "tokens" => [$offert->fcmToken],
+            "tittle" => "ServiUf: Informacion sobre tu oferta",
+            "body"   => "Cliente cancela cita",
+            "data"   => ['type' => 'refferers']
+        ];
+
+
+        SendNotifications($ConfigNotification);
+
+
+        $data = array('mensagge' => "Los datos fueron registrados satisfactoriamente");
+        return response()->json($data)->setStatusCode(200);
+
     }
+
+
+
+
+
+    public function NoAssistence($id_service, $pay){
+
+        $service = RequestService::where("id", $id_service)->first();
+
+        DB::table("cliente_charge")->insert([
+            "id_client" => $service->id_client,
+            "amount"    => $pay
+        ]);
+
+        RequestService::where("id", $id_service)->update([
+            "status"    => "Cancelado"
+        ]);
+
+        RequestOfferts::where("request_offerts.id_service", $id_service)->update([
+            "status" => "Cancelado"
+        ]);
+
+        $data = array('mensagge' => "Los datos fueron registrados satisfactoriamente");
+        return response()->json($data)->setStatusCode(200);
+
+    }
+
+
+    
+
+    public function getChargeClient($id_client){
+        
+        $data = DB::table("cliente_charge")
+                ->where( "id_client", $id_client)
+                ->where("status", 0)
+                ->first();
+
+        if($data){
+            return response()->json($data)->setStatusCode(200);    
+        }else{
+            return response()->json(false)->setStatusCode(400);    
+        }
+        
+
+    }
+
+    public function CancelClientService($id_service){
+
+
+        $service = RequestService::where("id", $id_service)->first();
+
+
+        $date1 = new DateTime(date("Y-m-d G:i:s"));
+        $date2 = new DateTime($service->date);
+
+
+        $interval = $date1->diff($date2);
+
+        $min = $interval->h * 60 + $interval->i;
+
+        if($min > 90){
+
+            $offert = RequestOfferts::join("clientes", "clientes.id", "=", "request_offerts.id_client")
+                                        ->where("request_offerts.id_service", $id_service)
+                                        ->first();
+
+            $ConfigNotification = [
+                "tokens" => [$offert->fcmToken],
+                "tittle" => "ServiUf: Informacion sobre tu oferta",
+                "body"   => "Cliente cancela cita",
+                "data"   => ['type' => 'refferers']
+            ];
+        
+            $code = SendNotifications($ConfigNotification);
+
+            RequestService::where("id", $id_service)->update([
+                "status"    => "Cancelado"
+            ]);
+
+            RequestOfferts::where("request_offerts.id_service", $id_service)->update([
+                "status" => "Cancelado"
+            ]);
+
+        }else{
+            $data = array('mensagge' => "Debes pagar");
+            return response()->json($data)->setStatusCode(400);
+        }
+
+        $data = array('mensagge' => "Los datos fueron registrados satisfactoriamente");
+        return response()->json($data)->setStatusCode(200);
+
+    }
+
+
+
 
 
     public function RefuseOffert($id_offert){

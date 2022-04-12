@@ -56,6 +56,12 @@ Route::get('clients', function () {
 });
 
 
+Route::get('chage-category', function () {
+    return view('catalogos.chage_category.gestion');
+});
+
+
+
 Route::get('clients/tasks/{id_client}/{option}', function ($id_client, $option) {
     return view('catalogos.clientes.tasks.gestion', ["id_client" => $id_client, "option" => $option]);
 });
@@ -523,6 +529,35 @@ Route::get('financing', function () {
 Route::get('register-app-ios', function () {
     return view('ios.gestion');
 });
+
+
+
+
+Route::get('email', function () {
+
+        Mail::send('emails.register',[], function($msj) {
+            $msj->from("admin@pdtcomunicaciones.com","ServiUf");
+            $msj->subject("ASunt");
+            $msj->to("cardenascarlos18@gmail.com");
+        });
+
+    return view('emails.register');
+});
+
+
+
+
+
+
+
+
+
+Route::get('recovery/account/{token}', function ($token) {
+    $data = DB::table("clientes")->where("token_recovery", $token)->first();
+    return view('welcome', ["token" => $token, "id_client" => $data->id, "name" => $data->names]);
+});
+
+
 
 
 

@@ -215,41 +215,41 @@ class Login extends Controller
     public function RecoveryAccount(Request $request){
 
         $data = DB::table("clientes")
-                    ->select("users.email", "users.id")
-                    ->where("identificacion", $request["identificacion"])
-                    ->join("users", "users.id_client", "=", "clientes.id_cliente")
+                    ->where("email", $request["email"])
                     ->first();
+        if($data){
 
-        User::find($data->id)->update(["password" => md5(123456789)]);
+            $token = md5($data->id);
+            DB::table("clientes")->where("email", $request["email"])->update(["token_recovery" => $token]);
+            $mensaje = "Bienvenido, ingresa al siguiente enlace para restablecer tu contraseña : https://serviceuf.pdtcomunicaciones.com/recovery/account/".$token;
 
+            $info_email = [
+                "email" => $data->email,
+                "issue"   => "Recuperar Contraseña",
+                "mensage" => $mensaje,
+            ];
 
-         $mensaje = "Bienvenido, tus datos de acceso son: ".$data->email." clave: 123456789";
+            $this->SendEmail($info_email);
+            return response()->json("ok")->setStatusCode(200);
 
-        $info_email = [
-            "user_id" => $data->id,
-            "issue"   => "Recuperar Contraseña",
-            "mensage" => $mensaje,
-        ];
+        }else{
+            return response()->json("La cuenta no existe")->setStatusCode(400);
+        }
 
-       $this->SendEmail($info_email);
-
-
-
-        return response()->json($data->id)->setStatusCode(200);
+        
     }
 
 
 
     public function SendEmail($data){
 
-        $user = User::find($data["user_id"]);
         $subject = $data["issue"];
         //$for = "cardenascarlos18@gmail.com";
-        $for = $user["email"];
+        $for = $data["email"];
         $request["msg"] = $data["mensage"];
 
         Mail::send('emails.notification',$request, function($msj) use($subject,$for){
-            $msj->from("cardenascarlos18@gmail.com","CRM");
+            $msj->from("admin@pdtcomunicaciones.com","ServiUf");
             $msj->subject($subject);
             $msj->to($for);
         });
@@ -382,6 +382,19 @@ class Login extends Controller
             return response()->json("error")->setStatusCode(400);
         }
 
+    }
+
+
+
+    public function ChangePassword(Request $request){
+        if($request["password"] !=  $request["repeat_password"]){
+            return response()->json("Las contraseñas no coinciden")->setStatusCode(400);
+        }else{
+
+            DB::table("clientes")->where("id", $request["id_client"])->update(["password" => md5($request["password"])]);
+
+            return response()->json("La contraseña se cambio exitosamente")->setStatusCode(200);
+        }
     }
 
 

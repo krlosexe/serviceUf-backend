@@ -50,12 +50,13 @@ class ChatsSouportController extends Controller
         ChatsSouport::create($request->all());
 
         $token = Clients::where("id", $request["receiver"])->first();
+        $sender = Clients::where("id", $request["sender"])->first();
 
         $ConfigNotification = [
             "tokens" => [$token->fcmToken],
-            "tittle" => "Chat del servicio",
-            "body"   => "Has recibido un nuevo mensaje",
-            "data"   => ['type' => 'refferers']
+            "tittle" => "Chat del servicio: ". $sender->names." ". $sender->last_names ,
+            "body"   => $request["message"],
+            "data"   => ['type' => 'chat']
         ];
     
         $code = SendNotifications($ConfigNotification);

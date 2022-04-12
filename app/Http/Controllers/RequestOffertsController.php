@@ -78,8 +78,9 @@ class RequestOffertsController extends Controller
      * @param  \App\RequestOfferts  $requestOfferts
      * @return \Illuminate\Http\Response
      */
-    public function destroy(RequestOfferts $requestOfferts)
+    public function destroy($requestOfferts)
     {
-        //
+        RequestOfferts::where("id", $requestOfferts)->delete();
+        return response()->json("Ok")->setStatusCode(200);
     }
 }

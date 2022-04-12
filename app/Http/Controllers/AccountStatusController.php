@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\AccountStatus;
+use App\ClientsServicesCategory;
+use App\RequestChangeCategory;
+use App\Clients;
 use Illuminate\Http\Request;
 use DB;
 class AccountStatusController extends Controller
@@ -49,6 +52,96 @@ class AccountStatusController extends Controller
 
         return response()->json(["balance" => $payment->amount - $discharges->amount])->setStatusCode(200);
     }
+
+
+    public function RequestUpdateCategoriesClient(Request $request){
+
+        $insert = RequestChangeCategory::create([
+            "id_client" => $request["id_client"]
+        ]);
+
+        db::table("request_chage_category_items")->insert([
+            "id_request_chage_category" => $insert->id,
+            "id_category"               => 1,
+            "value"                     => $request["barber"],
+        ]);
+
+        db::table("request_chage_category_items")->insert([
+            "id_request_chage_category" => $insert->id,
+            "id_category"               => 2,
+            "value"                     => $request["trenzas"],
+        ]);
+
+        db::table("request_chage_category_items")->insert([
+            "id_request_chage_category" => $insert->id,
+            "id_category"               => 3,
+            "value"                     => $request["pedicure"],
+        ]);
+
+        return response()->json("Ok")->setStatusCode(200);
+    }
+
+
+
+    public function GetChangeCategoriesClient(){
+        $data = RequestChangeCategory::SelectRaw("request_chage_category.*, clientes.names, clientes.last_names")
+                                    ->join("clientes", "clientes.id", "=", "request_chage_category.id_client")
+                                    ->with("items")
+                                    ->where("request_chage_category.status", "Pendiente")
+                                    ->get();
+        return response()->json($data)->setStatusCode(200);
+    }
+
+
+
+
+    public function GetCategoriesClient($id_client){
+        $data   = DB::table("clientes_services_category")
+                    ->join("category", "category.id", "=", "clientes_services_category.id_category")
+                    ->where("id_client", $id_client)
+                    ->get();
+
+        return response()->json($data)->setStatusCode(200);
+    }
+
+    
+    public function AprovedChangeCategoriesClient($id){
+        
+        $request = RequestChangeCategory::where("id", $id)->with("items")->first();
+
+        
+      
+
+       RequestChangeCategory::where("id", $id)->update(["status" => "Procesado"]);
+        
+       ClientsServicesCategory::where("id_client", $request->id_client)->delete();
+        foreach($request->items as $value){
+
+           if($value->value == 1){
+                ClientsServicesCategory::insert(['id_client' =>  $request->id_client, "id_category" =>  $value->id_category]);
+           }
+        }
+
+        $token = Clients::where("id", $request->id_client)->pluck('fcmToken')->toArray();
+
+
+        $ConfigNotification = [
+            "tokens" => $token,
+            "tittle" => "ServiUf",
+            "body"   => "Se aprobaron tus cambios de categorias",
+            "data"   => ['type' => 'refferers']
+        ];
+    
+        $code = SendNotifications($ConfigNotification);
+
+
+
+        
+        
+        return response()->json($request->items)->setStatusCode(200);
+    }
+    
+
 
     public function GetAccountStatusClient($id_client){
         $data   = DB::table("account_status")

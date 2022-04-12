@@ -87,7 +87,11 @@ class ClientsController extends Controller
      */
     public function store(Request $request)
     {
-      
+        
+
+        ini_set('memory_limit', '-1');
+
+
         $valid = Clients::where("email", $request["email"])->get();
     
         if(sizeof($valid) > 0){
@@ -108,6 +112,19 @@ class ClientsController extends Controller
 
         $cliente  = Clients::create($request->all());
 
+
+        $mensaje = "Nombres: ".$request["names"]." ".$request["last_names"].", Email: ".$request["email"];
+        $info_email = [
+            "issue"   => "Nuevo registro de Cliente ".$request["names"]." ".$request["last_names"],
+            "mensage" => $mensaje,
+            "nombre"  => $request["names"]." ".$request["last_names"],
+            "issue2"   => "Bienvenido ".$request["names"]." ".$request["last_names"],
+            "email"   => $request["email"]
+        ];
+
+        $this->SendEmail($info_email);
+
+
         if ($cliente) {
             $cliente  = Clients::where("id", $cliente->id)->first();
             return response()->json($cliente)->setStatusCode(200);
@@ -118,27 +135,50 @@ class ClientsController extends Controller
     }
 
 
-
     public function SendEmail($data){
 
-        $user = User::find($data["user_id"]);
-        $subject = $data["issue"];
 
-        //$for = "cardenascarlos18@gmail.com";
-        $for = $user["email"];
-
+        ini_set('memory_limit', '-1');
+        
+        $subject  = $data["issue"];
+        $subject2 = $data["issue2"];
         $request["msg"] = $data["mensage"];
+        $request["name"] = $data["nombre"];
 
-        Mail::send('emails.notification',$request, function($msj) use($subject,$for){
-            $msj->from("crm@pdtagencia.com","CRM");
+
+        // Mail::send('emails.notification',$request, function($msj) use($subject){
+        //     $msj->from("admin@pdtcomunicaciones.com","ServiUf");
+        //     $msj->subject($subject);
+        //     $msj->to("davisonflow225@gmail.com");
+        // });
+/*
+        Mail::send('emails.notification',$request, function($msj) use($subject){
+            $msj->from("admin@pdtcomunicaciones.com","ServiUf");
             $msj->subject($subject);
-            $msj->to($for);
+            $msj->to("cardenascarlos18@gmail.com");
         });
+*/
+
+
+        Mail::send('emails.register',$request, function($msj) use($subject2, $data){
+            $msj->from("admin@pdtcomunicaciones.com","ServiUf");
+            $msj->subject($subject2);
+            $msj->to($data["email"]);
+        });
+
+
+      /*  Mail::send('emails.register',$request, function($msj) use($subject2){
+            $msj->from("admin@pdtcomunicaciones.com","ServiUf");
+            $msj->subject($subject2);
+            $msj->to("cardenascarlos18@gmail.com");
+        });*/
+
+
+
 
         return true;
 
     }
-
 
 
     /**
@@ -207,15 +247,30 @@ class ClientsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id_client)
-    {
-        $cliente = Clients::where("id", $id_client)->update($request->all());
+    {   
 
-        if ($cliente) {
-            $data = array('mensagge' => "Los datos fueron registrados satisfactoriamente");
-            return response()->json($data)->setStatusCode(200);
+        $client = Clients::where("id", $id_client)->first();
+
+
+        $datetime1 = date_create($client->updated_at);
+        $datetime2 = date_create(date("Y-m-d"));
+        $interval = date_diff($datetime1, $datetime2);
+        $month = $interval->format("%m");
+
+        if($month > 3 ){
+            $cliente = Clients::where("id", $id_client)->update($request->all());
+
+            if ($cliente) {
+                $data = array('mensagge' => "Los datos fueron registrados satisfactoriamente");
+                return response()->json($data)->setStatusCode(200);
+            }else{
+                return response()->json("A ocurrido un error")->setStatusCode(400);
+            }
         }else{
-            return response()->json("A ocurrido un error")->setStatusCode(400);
+            return response()->json("Aun no puedes editar tu perfil")->setStatusCode(400);
         }
+        
+        
 
     }   
 
@@ -275,6 +330,18 @@ class ClientsController extends Controller
             "municipality"        => $request["municipality"],
             "service_provider"    => $request["service_provider"]
         ]);
+
+
+
+
+        $mensaje = "Nombres: ".$request["names"]." ".$request["last_names"].", Email: ".$request["email"].", Telefono: ".$request["phone"];
+        $info_email = [
+            "issue"   => "Registro Prestador de Servicios".$request["names"]." ".$request["last_names"],
+            "mensage" => $mensaje,
+        ];
+
+        $this->SendEmail($info_email);
+
 
 
         $data = array('mensagge' => "Los datos fueron registrados satisfactoriamente");
@@ -3160,6 +3227,29 @@ class ClientsController extends Controller
         $data = Clients::SelectRaw("id_cliente, nombres, telefono, email, identificacion")->where("id_cliente", $request["id"])->first();
         return response()->json($data)->setStatusCode(200);
 
+        
     }
+
+
+
+
+    public function StoreCharge(Request $request){
+        DB::table("cliente_charge")
+            ->where("id_client", $request["id_client"])
+            ->where("status", 0)
+            ->update([
+                "status" => 1,
+                "id_transactions" => $request["id_transactions"],
+                "payment"  => $request["payment"],
+                "payment_method"  => $request["payment_method"],
+            ]);
+        $data = array('mensagge' => "Los datos fueron registrados satisfactoriamente");
+        return response()->json($request->all())->setStatusCode(200);
+    }
+
+
+
+
+
 
 }
